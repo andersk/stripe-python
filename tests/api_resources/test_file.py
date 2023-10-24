@@ -33,7 +33,7 @@ class TestFile(object):
         hc.name = "mockclient"
         stripe.default_http_client = hc
         hc.request_with_retries.return_value = ('{"object": "file"}', 200, {})
-        stripe.multipart_data_generator.MultipartDataGenerator._initialize_boundary = (
+        stripe.multipart_data_generator._MultipartDataGenerator._initialize_boundary = (
             lambda self: 1234567890
         )
         test_file = tempfile.TemporaryFile()

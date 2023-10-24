@@ -11,6 +11,7 @@ class SingletonAPIResource(APIResource[T]):
     def retrieve(cls, **params) -> T:
         return super(SingletonAPIResource, cls).retrieve(None, **params)
 
+    # TODO (before removal): inline onto Tax.Settings and Balance
     @classmethod
     def class_url(cls):
         if cls == SingletonAPIResource:
@@ -23,5 +24,6 @@ class SingletonAPIResource(APIResource[T]):
         base = cls.OBJECT_NAME.replace(".", "/")
         return "/v1/%s" % (base,)
 
+    # TODO (before removal): inline onto Tax.Settings and Balance
     def instance_url(self):
         return self.class_url()

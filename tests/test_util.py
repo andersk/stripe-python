@@ -16,7 +16,7 @@ class TestUtil(object):
 
     def test_test_apikey(self, mocker):
         mocker.patch("stripe.api_key", "sk_test_KOWobxXidxNlIx")
-        link = util.dashboard_link(self.DUMMY_REQ_ID)
+        link = util._dashboard_link(self.DUMMY_REQ_ID)
         assert (
             link
             == "https://dashboard.stripe.com/test/logs/" + self.DUMMY_REQ_ID
@@ -24,7 +24,7 @@ class TestUtil(object):
 
     def test_live_apikey(self, mocker):
         mocker.patch("stripe.api_key", "sk_live_axwITqZSgTUXSN")
-        link = util.dashboard_link(self.DUMMY_REQ_ID)
+        link = util._dashboard_link(self.DUMMY_REQ_ID)
         assert (
             link
             == "https://dashboard.stripe.com/live/logs/" + self.DUMMY_REQ_ID
@@ -32,7 +32,7 @@ class TestUtil(object):
 
     def test_no_apikey(self, mocker):
         mocker.patch("stripe.api_key", None)
-        link = util.dashboard_link(self.DUMMY_REQ_ID)
+        link = util._dashboard_link(self.DUMMY_REQ_ID)
         assert (
             link
             == "https://dashboard.stripe.com/test/logs/" + self.DUMMY_REQ_ID
@@ -40,7 +40,7 @@ class TestUtil(object):
 
     def test_old_apikey(self, mocker):
         mocker.patch("stripe.api_key", "axwITqZSgTUXSN")
-        link = util.dashboard_link(self.DUMMY_REQ_ID)
+        link = util._dashboard_link(self.DUMMY_REQ_ID)
         assert (
             link
             == "https://dashboard.stripe.com/test/logs/" + self.DUMMY_REQ_ID
@@ -81,7 +81,7 @@ class TestUtil(object):
         ]
         self.log_test_loop(
             test_cases,
-            logging_func=util.log_debug,
+            logging_func=util._log_debug,
             logger_name="stripe.util.logger.debug",
             mocker=mocker,
         )
@@ -101,7 +101,7 @@ class TestUtil(object):
         ]
         self.log_test_loop(
             test_cases,
-            logging_func=util.log_info,
+            logging_func=util._log_info,
             logger_name="stripe.util.logger.info",
             mocker=mocker,
         )
@@ -122,7 +122,7 @@ class TestUtil(object):
             ),
         ]
         for case in cases:
-            result = util.logfmt(case.props)
+            result = util._logfmt(case.props)
             assert result == case.expected
 
     def test_convert_to_stripe_object_and_back(self):

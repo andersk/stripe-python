@@ -13,7 +13,7 @@ class UpdateableAPIResource(APIResource[T]):
         url = "%s/%s" % (cls.class_url(), quote_plus(sid))
         return cast(T, cls._static_request("post", url, params=params))
 
-    @util.deprecated(
+    @util._deprecated(
         "The `save` method is deprecated and will be removed in a future major version of the library. Use the class method `modify` on the resource instead."
     )
     def save(self, idempotency_key=None):

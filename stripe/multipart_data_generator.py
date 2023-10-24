@@ -2,9 +2,10 @@ import random
 import io
 
 import stripe
+from stripe import util
 
 
-class MultipartDataGenerator(object):
+class _MultipartDataGenerator(object):
     data: io.BytesIO
     line_break: str
     boundary: int
@@ -87,3 +88,10 @@ class MultipartDataGenerator(object):
 
     def _initialize_boundary(self):
         return random.randint(0, 2**63)
+
+
+@util._deprecated(
+    "This class is for internal stripe-python use only. The public interface will be removed in a future version."
+)
+class MultipartDataGenerator(_MultipartDataGenerator):
+    pass

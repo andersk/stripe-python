@@ -1,6 +1,8 @@
 from typing import Dict, Optional, Union, cast
 import stripe
 from stripe.api_resources.error_object import ErrorObject
+from stripe import util
+import warnings
 
 
 class StripeError(Exception):
@@ -41,7 +43,9 @@ class StripeError(Exception):
         self.headers = headers or {}
         self.code = code
         self.request_id = self.headers.get("request-id", None)
-        self.error = self.construct_error_object()
+        with warnings.catch_warnings():
+            warnings.simplefilter("ignore", DeprecationWarning)
+            self.error = self.construct_error_object()
 
     def __str__(self):
         msg = self._message or "<empty message>"
@@ -66,6 +70,9 @@ class StripeError(Exception):
             self.request_id,
         )
 
+    @util._deprecated(
+        "For internal stripe-python use only. The public interface will be removed in a future version."
+    )
     def construct_error_object(self) -> Optional[ErrorObject]:
         if (
             self.json_body is None

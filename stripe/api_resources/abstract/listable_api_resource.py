@@ -8,6 +8,7 @@ T = TypeVar("T", bound=StripeObject)
 
 class ListableAPIResource(APIResource[T]):
     @classmethod
+    # TODO: inline this onto resources
     def auto_paging_iter(cls, *args, **params):
         return cls.list(*args, **params).auto_paging_iter()
 

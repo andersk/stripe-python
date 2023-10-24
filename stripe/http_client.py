@@ -6,10 +6,11 @@ import time
 import random
 import threading
 import json
+from requests.sessions import Session
 
 import stripe
 from stripe import error, util
-from stripe.request_metrics import RequestMetrics
+from stripe.request_metrics import _RequestMetrics as RequestMetrics
 
 from typing import Any, Dict, Optional, Tuple, ClassVar, Union, cast
 from typing_extensions import NoReturn, TypedDict
@@ -73,7 +74,7 @@ def _now_ms():
     return int(round(time.time() * 1000))
 
 
-def new_default_http_client(*args, **kwargs):
+def new_default_http_client(*args: Any, **kwargs: Any):
     if urlfetch:
         impl = UrlFetchClient
     elif requests:
@@ -171,13 +172,13 @@ class HTTPClient(object):
 
             if self._should_retry(response, connection_error, num_retries):
                 if connection_error:
-                    util.log_info(
+                    util._log_info(
                         "Encountered a retryable error %s"
                         % connection_error.user_message
                     )
                 num_retries += 1
                 sleep_time = self._sleep_time_seconds(num_retries, response)
-                util.log_info(
+                util._log_info(
                     (
                         "Initiating retry %i for request %s %s after "
                         "sleeping %.2f seconds."
@@ -312,8 +313,16 @@ class HTTPClient(object):
 class RequestsClient(HTTPClient):
     name = "requests"
 
-    def __init__(self, timeout=80, session=None, **kwargs):
-        super(RequestsClient, self).__init__(**kwargs)
+    def __init__(
+        self,
+        timeout: int = 80,
+        session: Optional[Session] = None,
+        verify_ssl_certs: bool = True,
+        proxy: Optional[Union[str, HTTPClient._Proxy]] = None,
+    ):
+        super(RequestsClient, self).__init__(
+            verify_ssl_certs=verify_ssl_certs, proxy=proxy
+        )
         self._session = session
         self._timeout = timeout
 
@@ -445,7 +454,12 @@ class RequestsClient(HTTPClient):
 class UrlFetchClient(HTTPClient):
     name = "urlfetch"
 
-    def __init__(self, verify_ssl_certs=True, proxy=None, deadline=55):
+    def __init__(
+        self,
+        verify_ssl_certs: bool = True,
+        proxy: Optional[HTTPClient._Proxy] = None,
+        deadline: int = 55,
+    ):
         super(UrlFetchClient, self).__init__(
             verify_ssl_certs=verify_ssl_certs, proxy=proxy
         )
@@ -537,7 +551,11 @@ class PycurlClient(HTTPClient):
     name = "pycurl"
     _parsed_proxy: Optional[_ParsedProxy]
 
-    def __init__(self, verify_ssl_certs=True, proxy=None):
+    def __init__(
+        self,
+        verify_ssl_certs: bool = True,
+        proxy: Optional[HTTPClient._Proxy] = None,
+    ):
         super(PycurlClient, self).__init__(
             verify_ssl_certs=verify_ssl_certs, proxy=proxy
         )
@@ -689,7 +707,11 @@ class PycurlClient(HTTPClient):
 class Urllib2Client(HTTPClient):
     name = "urllib.request"
 
-    def __init__(self, verify_ssl_certs=True, proxy=None):
+    def __init__(
+        self,
+        verify_ssl_certs: bool = True,
+        proxy: Optional[HTTPClient._Proxy] = None,
+    ):
         super(Urllib2Client, self).__init__(
             verify_ssl_certs=verify_ssl_certs, proxy=proxy
         )
@@ -698,10 +720,10 @@ class Urllib2Client(HTTPClient):
         if self._proxy:
             # We have to cast _Proxy to Dict[str, str] because pyright is not smart enough to
             # realize that all the value types are str.
-            proxy = urllibrequest.ProxyHandler(
+            proxy_ = urllibrequest.ProxyHandler(
                 cast(Dict[str, str], self._proxy)
             )
-            self._opener = urllibrequest.build_opener(proxy)
+            self._opener = urllibrequest.build_opener(proxy_)
 
     def request(self, method, url, headers, post_data=None):
         return self._request_internal(

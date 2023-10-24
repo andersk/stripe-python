@@ -21,6 +21,9 @@ class APIResource(StripeObject, Generic[T]):
     OBJECT_NAME: ClassVar[str]
 
     @classmethod
+    @util._deprecated(
+        "This method is deprecated and will be removed in a future version of stripe-python. Child classes of APIResource should define their own `retrieve` and use APIResource._request directly."
+    )
     def retrieve(cls, id, api_key=None, **params) -> T:
         instance = cls(id, api_key, **params)
         instance.refresh()

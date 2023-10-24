@@ -19,7 +19,9 @@ from collections import OrderedDict
 
 import stripe
 from stripe import error, oauth_error, http_client, version, util
-from stripe.multipart_data_generator import MultipartDataGenerator
+from stripe.multipart_data_generator import (
+    _MultipartDataGenerator as MultipartDataGenerator,
+)
 from urllib.parse import urlencode, urlsplit, urlunsplit
 from stripe.stripe_response import StripeResponse, StripeStreamResponse
 
@@ -45,7 +47,9 @@ def _api_encode(data):
         if value is None:
             continue
         elif hasattr(value, "stripe_id"):
-            yield (key, value.stripe_id)
+            with warnings.catch_warnings():
+                warnings.simplefilter("ignore", DeprecationWarning)
+                yield (key, value.stripe_id)
         elif isinstance(value, list) or isinstance(value, tuple):
             for i, sv in enumerate(value):
                 if isinstance(sv, dict):
@@ -119,7 +123,14 @@ class APIRequestor(object):
             self._default_proxy = proxy
 
     @classmethod
+    @util._deprecated(
+        "This method is internal to stripe-python and the public interface will be removed in a future stripe-python version"
+    )
     def format_app_info(cls, info):
+        return cls._format_app_info(info)
+
+    @classmethod
+    def _format_app_info(cls, info):
         str = info["name"]
         if info["version"]:
             str += "/%s" % (info["version"],)
@@ -189,7 +200,7 @@ class APIRequestor(object):
         raise err
 
     def specific_api_error(self, rbody, rcode, resp, rheaders, error_data):
-        util.log_info(
+        util._log_info(
             "Stripe API error received",
             error_code=error_data.get("code"),
             error_type=error_data.get("type"),
@@ -245,7 +256,7 @@ class APIRequestor(object):
     def specific_oauth_error(self, rbody, rcode, resp, rheaders, error_code):
         description = resp.get("error_description", error_code)
 
-        util.log_info(
+        util._log_info(
             "Stripe OAuth error received",
             error_code=error_code,
             error_description=description,
@@ -271,7 +282,7 @@ class APIRequestor(object):
     def request_headers(self, api_key, method):
         user_agent = "Stripe/v1 PythonBindings/%s" % (version.VERSION,)
         if stripe.app_info:
-            user_agent += " " + self.format_app_info(stripe.app_info)
+            user_agent += " " + self._format_app_info(stripe.app_info)
 
         ua = {
             "bindings_version": version.VERSION,
@@ -380,8 +391,8 @@ class APIRequestor(object):
             for key, value in supplied_headers_dict.items():
                 headers[key] = value
 
-        util.log_info("Request to Stripe api", method=method, path=abs_url)
-        util.log_debug(
+        util._log_info("Request to Stripe api", method=method, path=abs_url)
+        util._log_debug(
             "Post details",
             post_data=encoded_params,
             api_version=self.api_version,
@@ -400,14 +411,16 @@ class APIRequestor(object):
                 method, abs_url, headers, post_data
             )
 
-        util.log_info("Stripe API response", path=abs_url, response_code=rcode)
-        util.log_debug("API response body", body=rcontent)
+        util._log_info(
+            "Stripe API response", path=abs_url, response_code=rcode
+        )
+        util._log_debug("API response body", body=rcontent)
 
         if "Request-Id" in rheaders:
             request_id = rheaders["Request-Id"]
-            util.log_debug(
+            util._log_debug(
                 "Dashboard link for request",
-                link=util.dashboard_link(request_id),
+                link=util._dashboard_link(request_id),
             )
 
         return rcontent, rcode, rheaders, my_api_key

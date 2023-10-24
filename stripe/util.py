@@ -1,3 +1,4 @@
+# Mark entire module as internal?
 import functools
 import hmac
 import io
@@ -8,7 +9,7 @@ import re
 import warnings
 
 import stripe
-from urllib.parse import parse_qsl, quote_plus
+from urllib.parse import quote_plus, parse_qsl as _parse_qsl
 
 from typing_extensions import Type, TYPE_CHECKING
 from typing import (
@@ -34,18 +35,24 @@ STRIPE_LOG = os.environ.get("STRIPE_LOG")
 logger: logging.Logger = logging.getLogger("stripe")
 
 __all__ = [
+    # We export 'io' from this module for monkey-patching in
+    # tests.
     "io",
-    "parse_qsl",
     "log_info",
     "log_debug",
     "dashboard_link",
     "logfmt",
-    "deprecated",
+    "parse_qsl",
+    "_log_info",
+    "_log_debug",
+    "_dashboard_link",
+    "_deprecated",
 ]
 
-if hasattr(typing_extensions, "deprecated"):
-    deprecated = typing_extensions.deprecated
-elif not TYPE_CHECKING:
+
+if TYPE_CHECKING:
+    _deprecated = typing_extensions.deprecated
+else:
     _T = TypeVar("_T")
 
     # Copied from python/typing_extensions, as this was added in typing_extensions 4.5.0 which is incompatible with
@@ -53,7 +60,7 @@ elif not TYPE_CHECKING:
     # IDEs (pylance) specially detect references to symbols defined in `typing_extensions`
     #
     # https://github.com/python/typing_extensions/blob/5d20e9eed31de88667542ba5a6f66e6dc439b681/src/typing_extensions.py#L2289-L2370
-    def deprecated(
+    def _deprecated(
         __msg: str,
         *,
         category: Optional[Type[Warning]] = DeprecationWarning,
@@ -118,15 +125,36 @@ def _console_log_level():
         return None
 
 
+@_deprecated(
+    "Import from urllib.parse instead. This will be removed in a future version."
+)
+def parse_qsl(*args, **kwargs):
+    return _parse_qsl(*args, **kwargs)
+
+
+@_deprecated(
+    "For stripe-python internal use only. The public interface will be removed in a future version."
+)
 def log_debug(message, **params):
-    msg = logfmt(dict(message=message, **params))
+    return _log_debug(message, **params)
+
+
+def _log_debug(message, **params):
+    msg = _logfmt(dict(message=message, **params))
     if _console_log_level() == "debug":
         print(msg, file=sys.stderr)
     logger.debug(msg)
 
 
+@_deprecated(
+    "For stripe-python internal use only. The public interface will be removed in a future version."
+)
 def log_info(message, **params):
-    msg = logfmt(dict(message=message, **params))
+    return _log_info(message, **params)
+
+
+def _log_info(message, **params):
+    msg = _logfmt(dict(message=message, **params))
     if _console_log_level() in ["debug", "info"]:
         print(msg, file=sys.stderr)
     logger.info(msg)
@@ -141,13 +169,20 @@ def _test_or_live_environment():
     return match.groups()[0]
 
 
+@_deprecated(
+    "For stripe-python internal use only. The public interface will be removed in a future version."
+)
 def dashboard_link(request_id):
+    return _dashboard_link(request_id)
+
+
+def _dashboard_link(request_id):
     return "https://dashboard.stripe.com/{env}/logs/{reqid}".format(
         env=_test_or_live_environment() or "test", reqid=request_id
     )
 
 
-def logfmt(props):
+def _logfmt(props):
     def fmt(key, val):
         # Handle case where val is a bytes or bytesarray
         if hasattr(val, "decode"):
@@ -166,6 +201,13 @@ def logfmt(props):
         return "{key}={val}".format(key=key, val=val)
 
     return " ".join([fmt(key, val) for key, val in sorted(props.items())])
+
+
+@_deprecated(
+    "For internal stripe-python use only. This will be removed in a future version."
+)
+def logfmt(props):
+    return _logfmt(props)
 
 
 # Borrowed from Django's source code
