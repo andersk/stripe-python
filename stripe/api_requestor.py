@@ -89,6 +89,7 @@ class APIRequestor(object):
         self,
         key=None,
         client=None,
+        client_async=None,
         api_base=None,
         api_version=None,
         account=None,

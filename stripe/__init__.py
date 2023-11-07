@@ -17,6 +17,7 @@ from stripe.app_info import AppInfo
 
 if TYPE_CHECKING:
     from stripe.http_client import HTTPClient
+    from stripe.http_client import HTTPClientAsync
 
 api_key: Optional[str] = None
 client_id: Optional[str] = None
@@ -27,6 +28,7 @@ api_version: str = _ApiVersion.CURRENT
 verify_ssl_certs: bool = True
 proxy: Optional[str] = None
 default_http_client: Optional["HTTPClient"] = None
+default_http_client_async: Optional["HTTPClientAsync"] = None
 app_info: Optional[AppInfo] = None
 enable_telemetry: bool = True
 max_network_retries: int = 0
