@@ -51,6 +51,17 @@ class TestRawRequest(object):
         stripe.api_version = orig_attrs["api_version"]
         stripe.default_http_client = orig_attrs["default_http_client"]
 
+    @pytest.mark.asyncio
+    async def test_form_request_get_async(self, mock_response, check_call):
+        mock_response('{"id": "acct_123", "object": "account"}', 200)
+
+        resp = await stripe.raw_request_async("get", self.GET_REL_URL)
+
+        check_call("get", abs_url=self.GET_ABS_URL)
+
+        deserialized = stripe.deserialize(resp)
+        assert isinstance(deserialized, stripe.Account)
+
     def test_form_request_get(self, mock_response, check_call):
         mock_response('{"id": "acct_123", "object": "account"}', 200)
 

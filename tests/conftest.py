@@ -1,6 +1,7 @@
 import atexit
 import os
 import sys
+import asyncio
 import pytest
 
 import stripe
@@ -9,6 +10,10 @@ import requests
 from tests.test_api_requestor import APIHeaderMatcher
 from tests.request_mock import RequestMock
 from tests.stripe_mock import StripeMock
+
+
+pytest_plugins = ('pytest_asyncio',)
+
 
 MOCK_MINIMUM_VERSION = "0.109.0"
 
