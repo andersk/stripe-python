@@ -381,19 +381,17 @@ class APIRequestor(object):
 
         return headers
 
-    async def request_raw_async(
-        self,
+    def _get_request_raw_args(self,
         method: str,
         url: str,
         params: Optional[Mapping[str, Any]] = None,
         supplied_headers: Optional[Mapping[str, str]] = None,
         is_streaming: bool = False,
         api_mode: Optional[Literal["preview", "standard"]] = None,
-    ) -> Tuple[object, int, Mapping[str, str], str]:
+    ) -> Tuple[str, Dict[str, Any], bytes | str | None, str]:
         """
         Mechanism for issuing an API call
         """
-
         supplied_headers_dict: Optional[Dict[str, str]] = (
             dict(supplied_headers) if supplied_headers is not None else None
         )
@@ -465,6 +463,21 @@ class APIRequestor(object):
             "Post details",
             post_data=encoded_params,
             api_version=self.api_version,
+        )
+
+        return abs_url, headers, post_data, my_api_key
+
+    async def request_raw_async(
+        self,
+        method: str,
+        url: str,
+        params: Optional[Mapping[str, Any]] = None,
+        supplied_headers: Optional[Mapping[str, str]] = None,
+        is_streaming: bool = False,
+        api_mode: Optional[Literal["preview", "standard"]] = None,
+    ) -> Tuple[object, int, Mapping[str, str], str]:
+        abs_url, headers, post_data, my_api_key = self._get_request_raw_args(
+            method, url, params, supplied_headers, is_streaming, api_mode
         )
 
         if is_streaming:
@@ -502,81 +515,8 @@ class APIRequestor(object):
         is_streaming: bool = False,
         api_mode: Optional[Literal["preview", "standard"]] = None,
     ) -> Tuple[object, int, Mapping[str, str], str]:
-        """
-        Mechanism for issuing an API call
-        """
-
-        supplied_headers_dict: Optional[Dict[str, str]] = (
-            dict(supplied_headers) if supplied_headers is not None else None
-        )
-
-        if self.api_key:
-            my_api_key = self.api_key
-        else:
-            from stripe import api_key
-
-            my_api_key = api_key
-
-        if my_api_key is None:
-            raise error.AuthenticationError(
-                "No API key provided. (HINT: set your API key using "
-                '"stripe.api_key = <API-KEY>"). You can generate API keys '
-                "from the Stripe web interface.  See https://stripe.com/api "
-                "for details, or email support@stripe.com if you have any "
-                "questions."
-            )
-
-        abs_url = "%s%s" % (self.api_base, url)
-
-        encoded_params = urlencode(list(_api_encode(params or {})))
-
-        # Don't use strict form encoding by changing the square bracket control
-        # characters back to their literals. This is fine by the server, and
-        # makes these parameter strings easier to read.
-        encoded_params = encoded_params.replace("%5B", "[").replace("%5D", "]")
-
-        if api_mode == "preview":
-            encoded_body = json.dumps(
-                params or {}, default=_json_encode_date_callback
-            )
-        else:
-            encoded_body = encoded_params
-
-        if method == "get" or method == "delete":
-            if params:
-                abs_url = _build_api_url(abs_url, encoded_params)
-            post_data = None
-        elif method == "post":
-            if (
-                supplied_headers_dict is not None
-                and supplied_headers_dict.get("Content-Type")
-                == "multipart/form-data"
-            ):
-                generator = MultipartDataGenerator()
-                generator.add_params(params or {})
-                post_data = generator.get_post_data()
-                supplied_headers_dict[
-                    "Content-Type"
-                ] = "multipart/form-data; boundary=%s" % (generator.boundary,)
-            else:
-                post_data = encoded_body
-        else:
-            raise error.APIConnectionError(
-                "Unrecognized HTTP method %r.  This may indicate a bug in the "
-                "Stripe bindings.  Please contact support@stripe.com for "
-                "assistance." % (method,)
-            )
-
-        headers = self.request_headers(my_api_key, method, api_mode)
-        if supplied_headers_dict is not None:
-            for key, value in supplied_headers_dict.items():
-                headers[key] = value
-
-        util.log_info("Request to Stripe api", method=method, path=abs_url)
-        util.log_debug(
-            "Post details",
-            post_data=encoded_params,
-            api_version=self.api_version,
+        abs_url, headers, post_data, my_api_key = self._get_request_raw_args(
+            method, url, params, supplied_headers, is_streaming, api_mode
         )
 
         if is_streaming:
