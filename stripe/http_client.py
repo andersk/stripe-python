@@ -328,6 +328,20 @@ class HTTPClient(_HTTPClientBase):
 
 
 class HTTPClientAsync(_HTTPClientBase):
+    async def request_with_retries(
+        self, method, url, headers, post_data=None
+    ) -> Tuple[Any, int, Any]:
+        return await self._request_with_retries_internal(
+            method, url, headers, post_data, is_streaming=False
+        )
+
+    async def request_stream_with_retries(
+        self, method, url, headers, post_data=None
+    ) -> Tuple[Any, int, Any]:
+        return await self._request_with_retries_internal(
+            method, url, headers, post_data, is_streaming=True
+        )
+
     @classmethod
     async def sleep(cls: Type[Self], secs: float) -> Awaitable[None]:
         raise NotImplementedError(
