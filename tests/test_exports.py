@@ -60,7 +60,7 @@ def test_can_import_abstract() -> None:
     from stripe.api_resources.abstract import ListableAPIResource as ListableFromAbs
     from stripe.api_resources.abstract import SearchableAPIResource as SearchableFromAbs
     from stripe.api_resources.abstract import VerifyMixin as VerifyMixinFromAbstract
-    from stripe.api_resources.abstract import custom_method as custom_methodFromAbstract
+    from stripe.api_resources.abstract import custom_method as custom_methodFromAbstract  # pyright: ignore[reportDeprecated]
     from stripe.api_resources.abstract import APIResourceTestHelpers as APIResourceTestHelpersFromAbstract
     from stripe.api_resources.abstract import nested_resource_class_methods as nested_resource_class_methodsFromAbstract
     # fmt: on
@@ -98,7 +98,10 @@ def test_can_import_abstract() -> None:
         == SearchableFromAbs[StripeObject]
     )
     assert stripe.abstract.VerifyMixin is VerifyMixinFromAbstract
-    assert stripe.abstract.custom_method is custom_methodFromAbstract
+    assert (
+        stripe.abstract.custom_method  # pyright: ignore[reportDeprecated]
+        is custom_methodFromAbstract
+    )
     assert (
         stripe.abstract.APIResourceTestHelpers[Any]
         is APIResourceTestHelpersFromAbstract[Any]
