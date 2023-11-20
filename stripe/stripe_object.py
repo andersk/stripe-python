@@ -363,9 +363,10 @@ class StripeObject(Dict[str, Any]):
         with warnings.catch_warnings():
             warnings.simplefilter("ignore")
             api_base = self.api_base()  # pyright: ignore[reportDeprecated]
+
         requestor = api_requestor.APIRequestor(
             key=api_key,
-            api_base=api_base,  # pyright: ignore[reportDeprecated]
+            api_base=api_base,
             api_version=stripe_version,
             account=stripe_account,
         )
