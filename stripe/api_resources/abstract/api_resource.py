@@ -8,6 +8,7 @@ from typing import (
     ClassVar,
     Dict,
     Generic,
+    List,
     Optional,
     TypeVar,
     cast,
@@ -99,6 +100,7 @@ class APIResource(StripeObject, Generic[T]):
         stripe_account: Optional[str] = None,
         headers: Optional[Dict[str, str]] = None,
         params: Optional[Mapping[str, Any]] = None,
+        _usage: Optional[List[str]] = None,
     ) -> Self:
         obj = StripeObject._request(
             self,
@@ -110,6 +112,7 @@ class APIResource(StripeObject, Generic[T]):
             stripe_account,
             headers,
             params,
+            _usage=_usage,
         )
 
         self.refresh_from(obj)
