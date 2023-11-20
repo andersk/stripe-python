@@ -134,6 +134,7 @@ class APIRequestor(object):
             )
             self._client_async = stripe.default_http_client_async
 
+
     @classmethod
     def format_app_info(cls, info):
         str = info["name"]
@@ -381,7 +382,8 @@ class APIRequestor(object):
 
         return headers
 
-    def _get_request_raw_args(self,
+    def _get_request_raw_args(
+        self,
         method: str,
         url: str,
         params: Optional[Mapping[str, Any]] = None,
@@ -489,7 +491,11 @@ class APIRequestor(object):
                 method, abs_url, headers, post_data
             )
         else:
-            rcontent, rcode, rheaders = await self._client_async.request_with_retries(
+            (
+                rcontent,
+                rcode,
+                rheaders,
+            ) = await self._client_async.request_with_retries(
                 method, abs_url, headers, post_data
             )
 
@@ -504,7 +510,6 @@ class APIRequestor(object):
             )
 
         return rcontent, rcode, rheaders, my_api_key
-
 
     def request_raw(
         self,

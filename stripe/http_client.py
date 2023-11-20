@@ -13,7 +13,17 @@ import stripe
 from stripe import error, util
 from stripe.request_metrics import RequestMetrics
 
-from typing import Any, Dict, Mapping, Optional, Tuple, ClassVar, Type, Union, cast
+from typing import (
+    Any,
+    Dict,
+    Mapping,
+    Optional,
+    Tuple,
+    ClassVar,
+    Type,
+    Union,
+    cast,
+)
 from typing_extensions import NoReturn, Self, TypedDict, Awaitable
 
 # - Requests is the preferred HTTP library
@@ -364,7 +374,9 @@ class HTTPClientAsync(_HTTPClientBase):
                         method, url, headers, post_data
                     )
                 else:
-                    response = await self.request(method, url, headers, post_data)
+                    response = await self.request(
+                        method, url, headers, post_data
+                    )
                 connection_error = None
             except error.APIConnectionError as e:
                 connection_error = e
@@ -484,7 +496,6 @@ class RequestsClient(HTTPClient):
             # also raise ValueError, RuntimeError, etc.
             self._handle_request_error(e)
 
-        reveal_type(content)
         return content, status_code, result.headers
 
     def _handle_request_error(self, e) -> NoReturn:
@@ -873,7 +884,9 @@ class HttpXClient(HTTPClientAsync):
     def sleep(self, secs):
         return asyncio.sleep(secs)
 
-    async def request(self, method, url, headers, post_data=None) -> Tuple[bytes, int, Mapping[str, str]]:
+    async def request(
+        self, method, url, headers, post_data=None
+    ) -> Tuple[bytes, int, Mapping[str, str]]:
         try:
             response = await self._client.request(
                 method, url, headers=headers, data=post_data
@@ -887,26 +900,18 @@ class HttpXClient(HTTPClientAsync):
         return content, status_code, response_headers
 
     def _handle_request_error(self, e) -> NoReturn:
-        # TODO: distinguish SSL, Timeout, Connection errors. Timeout and connection errors
-        # get retried.
         msg = (
-            "Unexpected error communicating with Stripe. "
-            "It looks like there's probably a configuration "
-            "issue locally.  If this problem persists, let us "
-            "know at support@stripe.com."
+            "Unexpected error communicating with Stripe. If this "
+            "problem persists, let us know at support@stripe.com."
         )
         err = "A %s was raised" % (type(e).__name__,)
-        should_retry = False
+        should_retry = True
 
         msg = textwrap.fill(msg) + "\n\n(Network error: %s)" % (err,)
         raise error.APIConnectionError(msg, should_retry=should_retry)
 
     async def request_stream(self, method, url, headers, post_data=None):
-        raise NotImplementedError(
-            "HTTPClient subclasses must implement `request_stream`"
-        )
+        raise NotImplementedError()
 
     async def close(self):
-        raise NotImplementedError(
-            "HTTPClient subclasses must implement `close`"
-        )
+        await self._client.aclose()
