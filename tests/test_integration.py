@@ -183,8 +183,11 @@ class TestIntegration(object):
         stripe.api_base = "http://localhost:%s" % self.mock_server_port
         stripe.enable_telemetry = True
 
-        stripe.Balance.retrieve()
-        stripe.Balance.retrieve()
+        cus = stripe.Customer("cus_xyz")
+        cus.description = "hello"
+        cus.save()
+
+        stripe.Customer.retrieve("cus_xyz")
 
         reqs = MockServerRequestHandler.get_requests(2)
         assert MockServerRequestHandler.num_requests == 2
@@ -201,6 +204,9 @@ class TestIntegration(object):
         # The first request took 31 ms, so the client perceived
         # latency shouldn't be outside this range.
         assert 30 < duration_ms < 300
+
+        usage = telemetry["last_request_metrics"]["usage"]
+        assert usage == ["save"]
 
     def test_uses_thread_local_client_telemetry(self):
         class MockServerRequestHandler(TestHandler):
