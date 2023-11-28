@@ -1,5 +1,4 @@
 import platform
-import sys
 from threading import Thread, Lock
 import json
 import warnings
@@ -14,10 +13,7 @@ from typing import List, Dict, Tuple, Optional
 if platform.python_implementation() == "PyPy":
     pytest.skip("skip integration tests with PyPy", allow_module_level=True)
 
-if sys.version_info[0] < 3:
-    from BaseHTTPServer import BaseHTTPRequestHandler, HTTPServer
-else:
-    from http.server import BaseHTTPRequestHandler, HTTPServer
+from http.server import BaseHTTPRequestHandler, HTTPServer
 
 
 class TestHandler(BaseHTTPRequestHandler):
