@@ -242,3 +242,40 @@ class TestIntegration(object):
 
         assert MockServerRequestHandler.num_requests == 20
         assert len(MockServerRequestHandler.seen_metrics) == 10
+
+    @pytest.mark.asyncio
+    async def test_async_raw_request_success(self):
+        class MockServerRequestHandler(TestHandler):
+            pass
+
+        self.setup_mock_server(MockServerRequestHandler)
+
+        stripe.api_base = "http://localhost:%s" % self.mock_server_port
+        await stripe.raw_request_async(
+            "post", "/v1/customers", description="My test customer"
+        )
+        reqs = MockServerRequestHandler.get_requests(1)
+        req = reqs[0]
+        import pdb
+
+        pdb.set_trace()
+
+    # async def test_async_raw_request_timeout(self):
+    #     class MockServerRequestHandler(TestHandler):
+    #         pass
+
+    #     await stripe.raw_request_async(
+    #         "post", "/v1/customers", description="My test customer"
+    #     )
+    #     reqs = MockServerRequestHandler.get_requests(1)
+    #     req = reqs[0]
+
+    # async def test_async_raw_request_retries(self):
+    #     class MockServerRequestHandler(TestHandler):
+    #         pass
+
+    #     await stripe.raw_request_async(
+    #         "post", "/v1/customers", description="My test customer"
+    #     )
+    #     reqs = MockServerRequestHandler.get_requests(1)
+    #     req = reqs[0]

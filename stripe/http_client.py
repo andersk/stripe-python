@@ -884,6 +884,9 @@ class HttpXClient(HTTPClientAsync):
                 method, url, headers=headers, data=post_data
             )
         except self.httpx.HTTPError as e:
+            import pdb
+
+            pdb.set_trace()
             self._handle_request_error(e)
 
         content = response.content
