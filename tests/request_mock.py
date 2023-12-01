@@ -110,17 +110,23 @@ class RequestMock(object):
             )
             raise AssertionError(msg)
 
-    def assert_requested(self, method, url, params=None, headers=None, _usage=None):
+    def assert_requested(
+        self, method, url, params=None, headers=None, _usage=None
+    ):
         self.assert_requested_internal(
             self.request_patcher, method, url, params, headers, _usage
         )
 
-    def assert_requested_stream(self, method, url, params=None, headers=None, _usage=None):
+    def assert_requested_stream(
+        self, method, url, params=None, headers=None, _usage=None
+    ):
         self.assert_requested_internal(
             self.request_stream_patcher, method, url, params, headers, _usage
         )
 
-    def assert_requested_internal(self, patcher, method, url, params, headers, usage):
+    def assert_requested_internal(
+        self, patcher, method, url, params, headers, usage
+    ):
         params = params or self._mocker.ANY
         headers = headers or self._mocker.ANY
         usage = usage or self._mocker.ANY
@@ -135,10 +141,7 @@ class RequestMock(object):
             (self._mocker.ANY, method, url, params, headers),
         ]
 
-        possible_called_kwargs = [
-            {},
-            {"_usage": usage}
-        ]
+        possible_called_kwargs = [{}, {"_usage": usage}]
 
         for args in possible_called_args:
             for kwargs in possible_called_kwargs:

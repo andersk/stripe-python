@@ -18,6 +18,6 @@ class RequestMetrics(object):
             "request_duration_ms": self.request_duration_ms,
         }
 
-        if (self.usage is not None and len(self.usage) > 0):
+        if self.usage is not None and len(self.usage) > 0:
             ret["usage"] = self.usage
         return ret
