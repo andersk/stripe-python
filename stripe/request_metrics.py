@@ -13,8 +13,11 @@ class RequestMetrics(object):
         self.usage = usage
 
     def payload(self):
-        return {
+        ret = {
             "request_id": self.request_id,
             "request_duration_ms": self.request_duration_ms,
-            "usage": self.usage,
         }
+
+        if (self.usage is not None and len(self.usage) > 0):
+            ret["usage"] = self.usage
+        return ret

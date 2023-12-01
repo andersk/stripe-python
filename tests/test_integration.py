@@ -164,8 +164,6 @@ class TestIntegration(object):
 
     def test_passes_client_telemetry_when_enabled(self):
         class MockServerRequestHandler(TestHandler):
-            num_requests = 0
-
             def do_request(self, req_num):
                 if req_num == 0:
                     time.sleep(31 / 1000)  # 31 ms
@@ -174,7 +172,7 @@ class TestIntegration(object):
                     200,
                     {
                         "Content-Type": "application/json; charset=utf-8",
-                        "Request-Id": "req_1",
+                        "Request-Id": "req_%s" % (req_num + 1),
                     },
                     None,
                 ]
@@ -188,9 +186,10 @@ class TestIntegration(object):
         cus.save()
 
         stripe.Customer.retrieve("cus_xyz")
+        stripe.Customer.retrieve("cus_xyz")
 
-        reqs = MockServerRequestHandler.get_requests(2)
-        assert MockServerRequestHandler.num_requests == 2
+        reqs = MockServerRequestHandler.get_requests(3)
+
         # req 1
         assert not reqs[0].headers.get("x-stripe-client-telemetry")
         # req 2
@@ -207,6 +206,13 @@ class TestIntegration(object):
 
         usage = telemetry["last_request_metrics"]["usage"]
         assert usage == ["save"]
+
+        # req 3
+        telemetry_raw = reqs[2].headers.get("x-stripe-client-telemetry")
+        assert telemetry_raw is not None
+        metrics = json.loads(telemetry_raw)["last_request_metrics"]
+        assert metrics["request_id"] == "req_2"
+        assert "usage" not in metrics
 
     def test_uses_thread_local_client_telemetry(self):
         class MockServerRequestHandler(TestHandler):
